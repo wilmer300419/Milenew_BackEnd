@@ -174,7 +174,7 @@
         id_bus         SERIAL PRIMARY KEY,
         id_bus_type_fk INT NOT NULL,
         latitude_bus    NUMERIC(9,6),
-        longitude_bus   NUMERIC(9,6)
+        longitude_bus   NUMERIC(9,6),
         code_bus       VARCHAR(20) NOT NULL UNIQUE,
         plate_bus      VARCHAR(10) NOT NULL UNIQUE,
         state_bus      BOOLEAN NOT NULL DEFAULT TRUE

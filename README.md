@@ -27,8 +27,7 @@
 | Joan Sebastian Romaña Tavera  | [Joansebastianromanatavera@gmail.com](mailto:Joansebastianromanatavera@gmail.com)       |
 | Santiago Santana              | [santiagosantananieto2@gmail.com](mailto:santiagosantananieto2@gmail.com)               |
 | Juan Jose Lopez Reina         | [Juan1909070@gmail.com](mailto:Juan1909070@gmail.com)                                   |
-| Daniel Chaves Muñoz           | [decosmos.dan@gmail.com](mailto:decosmos.dan@gmail.com)                                 |
-| Andres Felipe Dueñas Martinez | [andresfelipeduenasmartinez10@gmail.com](mailto:andresfelipeduenasmartinez10@gmail.com) |
+
 
 ---
 

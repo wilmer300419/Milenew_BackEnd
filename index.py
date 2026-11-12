@@ -1,20 +1,35 @@
+from datetime import date, datetime, time
+
 from flask import Flask, jsonify
+from flask.json.provider import DefaultJSONProvider
+from flask_cors import CORS
 from config import config_dict
 from src.database.database import Database
 
 # Blueprints (capa de rutas)
+from src.routes.auth.auth_routes import auth_bp
 from src.routes.auth.user_routes import user_bp
-from src.routes.auth.rol_routes import rol_bp
 from src.routes.auth.document_type_routes import document_type_bp
+from src.routes.auth.registration_routes import registration_bp
 
 # Excepciones de dominio
 from src.utils.errors import NotFoundError, ConflictError
 
 
+class ApiJSONProvider(DefaultJSONProvider):
+    """Fechas/horas en formato ISO (ej. 2026-09-30) para que el front las lea facil."""
+
+    def default(self, o):
+        if isinstance(o, (date, datetime, time)):
+            return o.isoformat()
+        return super().default(o)
+
+
 def register_blueprints(app):
+    app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
-    app.register_blueprint(rol_bp)
     app.register_blueprint(document_type_bp)
+    app.register_blueprint(registration_bp)
 
 
 def register_error_handlers(app):
@@ -36,6 +51,10 @@ def register_error_handlers(app):
     def handle_db_down(e):
         return jsonify({"error": "database_unavailable", "message": str(e)}), 503
 
+    @app.errorhandler(NotImplementedError)
+    def handle_stand_by(e):
+        return jsonify({"error": "not_implemented", "message": str(e)}), 501
+
     @app.errorhandler(404)
     def handle_route_not_found(e):
         return jsonify({"error": "not_found", "message": "Ruta no encontrada."}), 404
@@ -52,7 +71,11 @@ def register_error_handlers(app):
 
 def create_app(config_name="default"):
     app = Flask(__name__)
+    app.json = ApiJSONProvider(app)
     app.config.from_object(config_dict[config_name])
+
+    # CORS: permite que el frontend (otro dominio/puerto) llame a la API.
+    CORS(app)
 
     def check_db_connection():
         conn = Database.get_db_connection()

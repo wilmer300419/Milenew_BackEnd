@@ -71,6 +71,7 @@ class AppUserService:
         return self._public(row)
 
     def delete(self, id_user):
+        # Borrado logico: sp_UpdateState_User(id, FALSE)
         if self.repo.find_by_id(id_user) is None:
             raise NotFoundError(f"No existe el usuario con id {id_user}.")
         return self.repo.delete(id_user)

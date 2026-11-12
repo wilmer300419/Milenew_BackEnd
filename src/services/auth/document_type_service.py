@@ -36,5 +36,6 @@ class DocumentTypeService:
         return self.repo.update(id_doc_type, doc.to_dict())
 
     def delete(self, id_doc_type):
-        self.get(id_doc_type)
+        # Borrado logico: sp_UpdateState_Document_Type(id, FALSE)
+        self.get(id_doc_type)  # 404 si no existe
         return self.repo.delete(id_doc_type)

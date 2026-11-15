@@ -15,9 +15,8 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      # No fijamos POSTGRES_DB a proposito: el script de esquema hace
-      # DROP/CREATE DATABASE milenew_db y luego \c, por eso init corre
-      # conectado a la base por defecto ("postgres").
+      # No fijamos POSTGRES_DB: docker/init.sh crea milenew_db y carga ahi
+      # el esquema y los stored procedures.
     ports:
       - "5432:5432"
     volumes:
@@ -25,7 +24,7 @@ services:
       - ./db_documentation/stored_procedures.sql:/sql/02_procedures.sql:ro
       - ./db_documentation/stored_procedures_final.sql:/sql/03_procedures_final.sql:ro
       - ./db_documentation/stored_procedures_hectordev.sql:/sql/04_procedures_hectordev.sql:ro
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./docker/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
       - milenew_pgdata:/var/lib/postgresql/data
 
 volumes:

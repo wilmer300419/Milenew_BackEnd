@@ -41,10 +41,13 @@ class AppUserService:
         payload = user.to_dict()                       # no trae password (por diseno)
         payload["password"] = generate_password_hash(user.get_password())
         try:
-            row = self.repo.create(payload)
+            self.repo.create(payload)
         except psycopg2.errors.UniqueViolation:
             raise ConflictError(f"El username '{data.get('username')}' ya esta en uso.")
-        return self._public(row)
+        except psycopg2.errors.ForeignKeyViolation:
+            raise ValueError("La persona o el rol indicados no existen.")
+        # sp_Insert_User no devuelve el id: se recupera por username (es UNIQUE).
+        return self._public(self.repo.find_by_username(user.get_username()))
 
     def update(self, id_user, data):
         current = self.repo.find_by_id(id_user)
@@ -69,6 +72,8 @@ class AppUserService:
             row = self.repo.update(id_user, payload)
         except psycopg2.errors.UniqueViolation:
             raise ConflictError(f"El username '{data.get('username')}' ya esta en uso.")
+        except psycopg2.errors.ForeignKeyViolation:
+            raise ValueError("La persona o el rol indicados no existen.")
         return self._public(row)
 
     def delete(self, id_user):

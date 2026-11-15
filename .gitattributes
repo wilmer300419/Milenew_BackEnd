@@ -1,0 +1,2 @@
+# Los scripts de shell corren dentro de Linux (Docker): siempre con saltos de linea LF.
+*.sh text eol=lf

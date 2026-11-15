@@ -10,7 +10,9 @@ import datetime
 import jwt
 from decouple import config
 
-SECRET = config("SECRET_KEY", default="dev_secret_key")
+from config import Config
+
+SECRET = Config.SECRET_KEY        # una sola fuente: config.py / .env
 ALGORITHM = "HS256"
 EXPIRES_MINUTES = config("TOKEN_EXPIRES_MIN", default=120, cast=int)
 

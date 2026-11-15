@@ -4,7 +4,7 @@ from decimal import Decimal
 from flask import Flask, jsonify
 from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
-from config import config_dict
+from config import config_dict, APP_ENV, validate_secret_key
 from src.database.database import Database
 
 # Blueprints (capa de rutas)
@@ -14,6 +14,12 @@ from src.routes.auth.document_type_routes import document_type_bp
 from src.routes.auth.registration_routes import registration_bp
 from src.routes.auth.profile_routes import profile_bp
 from src.routes.catalog_routes import rol_bp, employee_area_bp, employee_position_bp
+from src.routes.admin_routes import (
+    permission_bp, rol_permission_bp, person_bp, passenger_bp, employee_bp,
+)
+from src.routes.transit.schedule_routes import (
+    schedule_bp, service_type_bp, route_links_bp, bus_employee_bp,
+)
 
 from src.routes.transit.station_routes import station_bp, station_type_bp
 from src.routes.transit.bus_routes import bus_bp, bus_type_bp
@@ -47,12 +53,22 @@ def register_blueprints(app):
     app.register_blueprint(rol_bp)
     app.register_blueprint(employee_area_bp)
     app.register_blueprint(employee_position_bp)
+    # Permisos y administracion de personas, pasajeros y empleados
+    app.register_blueprint(permission_bp)
+    app.register_blueprint(rol_permission_bp)
+    app.register_blueprint(person_bp)
+    app.register_blueprint(passenger_bp)
+    app.register_blueprint(employee_bp)
     # Transit
     app.register_blueprint(station_bp)
     app.register_blueprint(station_type_bp)
     app.register_blueprint(bus_bp)
     app.register_blueprint(bus_type_bp)
     app.register_blueprint(route_bp)
+    app.register_blueprint(schedule_bp)
+    app.register_blueprint(service_type_bp)
+    app.register_blueprint(route_links_bp)
+    app.register_blueprint(bus_employee_bp)
     # Ticketing
     app.register_blueprint(card_bp)
     app.register_blueprint(card_type_bp)
@@ -108,7 +124,8 @@ def register_error_handlers(app):
 def create_app(config_name="default"):
     app = Flask(__name__)
     app.json = ApiJSONProvider(app)
-    app.config.from_object(config_dict[config_name])
+    app.config.from_object(config_dict.get(config_name, config_dict["default"]))
+    validate_secret_key(app.config)  # en produccion no arranca con una clave debil
 
     # CORS: permite que el frontend (otro dominio/puerto) llame a la API.
     CORS(app)
@@ -145,7 +162,8 @@ def create_app(config_name="default"):
     return app
 
 
-app = create_app("development")
+# El entorno se elige en el .env (APP_ENV=development | production).
+app = create_app(APP_ENV)
 
 if __name__ == "__main__":
     port = app.config["PORT"]

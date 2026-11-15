@@ -23,6 +23,8 @@ services:
     volumes:
       - ./db_documentation/script_milenew_db.sql:/sql/01_schema.sql:ro
       - ./db_documentation/stored_procedures.sql:/sql/02_procedures.sql:ro
+      - ./db_documentation/stored_procedures_final.sql:/sql/03_procedures_final.sql:ro
+      - ./db_documentation/stored_procedures_hectordev.sql:/sql/04_procedures_hectordev.sql:ro
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - milenew_pgdata:/var/lib/postgresql/data
 

@@ -1,4 +1,5 @@
 from datetime import date, datetime, time
+from decimal import Decimal
 
 from flask import Flask, jsonify
 from flask.json.provider import DefaultJSONProvider
@@ -11,9 +12,18 @@ from src.routes.auth.auth_routes import auth_bp
 from src.routes.auth.user_routes import user_bp
 from src.routes.auth.document_type_routes import document_type_bp
 from src.routes.auth.registration_routes import registration_bp
+from src.routes.auth.profile_routes import profile_bp
+from src.routes.catalog_routes import rol_bp, employee_area_bp, employee_position_bp
+
+from src.routes.transit.station_routes import station_bp, station_type_bp
+from src.routes.transit.bus_routes import bus_bp, bus_type_bp
+from src.routes.transit.route_routes import route_bp
+from src.routes.ticketing.card_routes import (
+    card_bp, card_type_bp, card_state_bp, transaction_type_bp,
+)
 
 # Excepciones de dominio
-from src.utils.errors import NotFoundError, ConflictError
+from src.utils.errors import NotFoundError, ConflictError, NotConfiguredError, ForbiddenError
 
 
 class ApiJSONProvider(DefaultJSONProvider):
@@ -22,6 +32,8 @@ class ApiJSONProvider(DefaultJSONProvider):
     def default(self, o):
         if isinstance(o, (date, datetime, time)):
             return o.isoformat()
+        if isinstance(o, Decimal):  # NUMERIC de PostgreSQL (saldos, coordenadas) -> numero JSON
+            return float(o)
         return super().default(o)
 
 
@@ -30,6 +42,22 @@ def register_blueprints(app):
     app.register_blueprint(user_bp)
     app.register_blueprint(document_type_bp)
     app.register_blueprint(registration_bp)
+    app.register_blueprint(profile_bp)
+    # Catalogos para formularios
+    app.register_blueprint(rol_bp)
+    app.register_blueprint(employee_area_bp)
+    app.register_blueprint(employee_position_bp)
+    # Transit
+    app.register_blueprint(station_bp)
+    app.register_blueprint(station_type_bp)
+    app.register_blueprint(bus_bp)
+    app.register_blueprint(bus_type_bp)
+    app.register_blueprint(route_bp)
+    # Ticketing
+    app.register_blueprint(card_bp)
+    app.register_blueprint(card_type_bp)
+    app.register_blueprint(card_state_bp)
+    app.register_blueprint(transaction_type_bp)
 
 
 def register_error_handlers(app):
@@ -43,6 +71,10 @@ def register_error_handlers(app):
     def handle_not_found(e):
         return jsonify({"error": "not_found", "message": str(e)}), 404
 
+    @app.errorhandler(ForbiddenError)
+    def handle_forbidden(e):
+        return jsonify({"error": "forbidden", "message": str(e)}), 403
+
     @app.errorhandler(ConflictError)
     def handle_conflict(e):
         return jsonify({"error": "conflict", "message": str(e)}), 409
@@ -50,6 +82,10 @@ def register_error_handlers(app):
     @app.errorhandler(ConnectionError)
     def handle_db_down(e):
         return jsonify({"error": "database_unavailable", "message": str(e)}), 503
+
+    @app.errorhandler(NotConfiguredError)
+    def handle_not_configured(e):
+        return jsonify({"error": "not_configured", "message": str(e)}), 503
 
     @app.errorhandler(NotImplementedError)
     def handle_stand_by(e):

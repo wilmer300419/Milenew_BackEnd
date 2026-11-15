@@ -5,3 +5,7 @@
 \i /sql/01_schema.sql
 \c milenew_db
 \i /sql/02_procedures.sql
+-- SPs agregados por HectorDev (rol/permission, buses, tarjetas, route_bus;
+-- estaciones, rutas, route_station, horarios, tipos de servicio y transaccion).
+\i /sql/03_procedures_final.sql
+\i /sql/04_procedures_hectordev.sql

@@ -26,6 +26,7 @@ Cuerpo esperado (JSON):
 from datetime import date
 
 import psycopg2
+from decouple import config
 from werkzeug.security import generate_password_hash
 
 from src.database.unit_of_work import UnitOfWork
@@ -34,9 +35,13 @@ from src.models.employees import EmployeeModel
 from src.models.ticketing import PassengerModel
 from src.services.auth.person_repository import PersonRepository
 from src.services.auth.app_user_repository import AppUserRepository
+from src.services.auth.rol_repository import RolRepository
 from src.services.employees.employee_repository import EmployeeRepository
 from src.services.ticketing.passenger_repository import PassengerRepository
-from src.utils.errors import ConflictError
+from src.utils.errors import ConflictError, NotConfiguredError
+
+# Nombre del rol que se asigna en el registro publico (configurable en el .env).
+PASSENGER_ROL_NAME = config("PASSENGER_ROL_NAME", default="Pasajero")
 
 # Id ficticio usado SOLO para validar los modelos antes de insertar; el FK real
 # se asigna despues, cuando la tabla padre ya existe dentro de la transaccion.
@@ -81,6 +86,23 @@ class RegistrationService:
             }
 
         return self._run(work)
+
+    def register_public_passenger(self, data):
+        """
+        Auto-registro desde el front (SIN token). El rol NO lo decide el cliente:
+        siempre se asigna el rol de pasajero, aunque manden otro id_rol_fk.
+        """
+        rol = RolRepository().find_by_name(PASSENGER_ROL_NAME)
+        if rol is None:
+            raise NotConfiguredError(
+                f"No existe el rol '{PASSENGER_ROL_NAME}' en la base de datos; "
+                "un administrador debe crearlo antes de habilitar el registro."
+            )
+        data = dict(data or {})
+        user_block = dict(data.get("user") or {})
+        user_block["id_rol_fk"] = rol["id_rol"]
+        data["user"] = user_block
+        return self.register_passenger(data)
 
     def register_passenger(self, data):
         person, user_block = self._validate_base(data)

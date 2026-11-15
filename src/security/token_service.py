@@ -22,6 +22,7 @@ def generate_token(user):
         "sub": str(user.get("id_user")),   # PyJWT exige que 'sub' sea string
         "username": user.get("username"),
         "id_rol": user.get("id_rol_fk"),
+        "rol": user.get("name_rol"),        # nombre del rol, para los permisos
         "iat": now,
         "exp": now + datetime.timedelta(minutes=EXPIRES_MINUTES),
     }

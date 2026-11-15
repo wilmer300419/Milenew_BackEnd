@@ -3,6 +3,7 @@ import psycopg2
 
 from src.models.auth import AppUserModel
 from src.services.auth.app_user_repository import AppUserRepository
+from src.services.auth.person_repository import PersonRepository
 from src.utils.errors import NotFoundError, ConflictError
 
 
@@ -77,8 +78,28 @@ class AppUserService:
         return self.repo.delete(id_user)
 
     def verify_credentials(self, username, password):
-        """Util para el futuro login: valida usuario/contrasena."""
+        """Valida username + contrasena. Devuelve el usuario publico o None."""
         row = self.repo.find_by_username(username)
+        if row is None or not check_password_hash(row["password"], password):
+            return None
+        return self._public(row)
+
+    def verify_credentials_by_email(self, email, password):
+        """
+        Valida email + contrasena: email -> persona -> su usuario ACTIVO.
+        (No hay SP de busqueda por email; se filtra de sp_GetAll_Person.)
+        """
+        target = (email or "").strip().lower()
+        if not target:
+            return None
+        person = next(
+            (p for p in PersonRepository().find_all()
+             if (p.get("email_person") or "").strip().lower() == target),
+            None,
+        )
+        if person is None:
+            return None
+        row = self.repo.find_one_by("id_person_fk", person["id_person"])
         if row is None or not check_password_hash(row["password"], password):
             return None
         return self._public(row)

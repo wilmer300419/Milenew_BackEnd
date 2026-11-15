@@ -8,7 +8,7 @@ from src.services.ticketing.passenger_repository import PassengerRepository
 from src.security.permissions import is_admin
 from src.utils import payload as P
 from src.utils.db_errors import translate_db_errors
-from src.utils.errors import ForbiddenError
+from src.utils.errors import ForbiddenError, ConflictError
 
 
 class CardService(CrudService):
@@ -27,16 +27,28 @@ class CardService(CrudService):
         self.passengers = PassengerRepository()
 
     def validate(self, data, current=None):
-        for key in ("id_passenger_fk", "id_card_type_fk", "id_card_state_fk"):
-            P.integer(data, key)
+        # Sin pasajero = tarjeta NO personalizada (id_passenger_fk NULL en la DB).
+        id_passenger = P.integer(data, "id_passenger_fk", required=False)
         card = CardModel(
-            id_passenger_fk=data.get("id_passenger_fk"),
-            id_card_type_fk=data.get("id_card_type_fk"),
-            id_card_state_fk=data.get("id_card_state_fk"),
+            id_passenger_fk=id_passenger,
+            id_card_type_fk=P.integer(data, "id_card_type_fk"),
+            id_card_state_fk=P.integer(data, "id_card_state_fk"),
             balance_card=current["balance_card"] if current else 0,
         )
+        if id_passenger is not None:
+            self._ensure_single_personalized_card(id_passenger, current)
         d = card.to_dict()
         return {k: d[k] for k in self.repo.insert_params}
+
+    def _ensure_single_personalized_card(self, id_passenger, current=None):
+        """Un pasajero solo puede tener UNA tarjeta personalizada (al editar no cuenta la propia)."""
+        own_id = current["id_card"] if current else None
+        for other in self.repo.find_all():
+            if other.get("id_passenger_fk") == id_passenger and other.get("id_card") != own_id:
+                raise ConflictError(
+                    f"El pasajero {id_passenger} ya tiene la tarjeta personalizada {other['id_card']}. "
+                    "Para reemplazarla, primero desvincula la anterior (id_passenger_fk: null)."
+                )
 
     def check_access(self, id_card, user):
         """

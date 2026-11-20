@@ -18,7 +18,8 @@ class CardModel:
     @Validators.integer(min_value=1, required=False)
     def set_id_card(self, value): self.__id_card = value
 
-    @Validators.integer(min_value=1, required=True)
+    # Opcional: una tarjeta sin pasajero es una tarjeta NO personalizada (en la DB es NULL).
+    @Validators.integer(min_value=1, required=False)
     def set_id_passenger_fk(self, value): self.__id_passenger_fk = value
 
     @Validators.integer(min_value=1, required=True)

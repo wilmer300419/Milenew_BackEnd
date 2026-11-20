@@ -19,6 +19,7 @@ from .transit import (
     BusTypeModel,
     BusModel,
     BusEmployeeModel,
+    DayTypeModel,
     ScheduleModel,
     RouteModel,
     RouteBusModel,

@@ -1,3 +1,5 @@
 Flask==3.0.2
 psycopg2-binary>=2.9.10
 python-decouple==3.8
+Flask-Cors>=4.0
+PyJWT>=2.8

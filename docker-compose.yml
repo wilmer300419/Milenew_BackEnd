@@ -1,0 +1,31 @@
+# Base de datos de desarrollo lista para "conexion rapida".
+#
+#   docker compose up -d     -> levanta PostgreSQL, crea el esquema y carga los
+#                               stored procedures automaticamente (primer arranque).
+#   docker compose down      -> apaga (los datos quedan en el volumen).
+#   docker compose down -v    -> apaga y BORRA los datos (recarga el esquema al subir).
+#
+# La app se conecta con los valores del .env: localhost:5432 / milenew_db / postgres.
+
+services:
+  db:
+    image: postgres:16
+    container_name: milenew_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # No fijamos POSTGRES_DB: docker/init.sh crea milenew_db y carga ahi
+      # el esquema y los stored procedures.
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db_documentation/script_milenew_db.sql:/sql/01_schema.sql:ro
+      - ./db_documentation/stored_procedures.sql:/sql/02_procedures.sql:ro
+      - ./db_documentation/stored_procedures_final.sql:/sql/03_procedures_final.sql:ro
+      - ./db_documentation/stored_procedures_hectordev.sql:/sql/04_procedures_hectordev.sql:ro
+      - ./docker/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+      - milenew_pgdata:/var/lib/postgresql/data
+
+volumes:
+  milenew_pgdata:
